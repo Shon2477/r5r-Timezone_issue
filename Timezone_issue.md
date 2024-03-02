@@ -17,58 +17,13 @@ Sys.setenv(JAVA_HOME='C:/Program Files/Java/jdk-11')
 
 # Load libraries
 library(r5r)
-```
-
-    ## Warning: package 'r5r' was built under R version 4.2.3
-
-    ## Please make sure you have already allocated some memory to Java by running:
-    ##   options(java.parameters = '-Xmx2G').
-    ## You should replace '2G' by the amount of memory you'll require. Currently, Java memory is set to
-
-``` r
 library(rJava)
 library(dplyr)
-```
-
-    ## Warning: package 'dplyr' was built under R version 4.2.3
-
-    ## 
-    ## Attaching package: 'dplyr'
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     filter, lag
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     intersect, setdiff, setequal, union
-
-``` r
 library(ggplot2)
-```
-
-    ## Keep up to date with changes at https://www.tidyverse.org/blog/
-
-``` r
 library(sf)
-```
-
-    ## Linking to GEOS 3.9.1, GDAL 3.4.3, PROJ 7.2.1; sf_use_s2() is TRUE
-
-``` r
 library(osmextract)
-```
-
-    ## Warning: package 'osmextract' was built under R version 4.2.3
-
-    ## Data (c) OpenStreetMap contributors, ODbL 1.0. https://www.openstreetmap.org/copyright.
-    ## Check the package website, https://docs.ropensci.org/osmextract/, for more details.
-
-``` r
 library(osmdata)
 ```
-
-    ## Data (c) OpenStreetMap contributors, ODbL 1.0. https://www.openstreetmap.org/copyright
 
 \#Build Transport Network We specify the data path and initialize the R5
 transport network.
@@ -77,7 +32,11 @@ transport network.
 options(java.parameters = "-Xmx8g")
 
 .jinit()
+```
 
+    ## [1] 0
+
+``` r
 # Specify the data path
 your_data_path <- "C:/UCL/Dissertation/transit_data"
 
@@ -244,3 +203,91 @@ r5r::r5r_sitrep()
 
 Can you please help with the issue or guide me in the right dierection
 how to resolve this? Thanks for any help in advance.
+
+``` r
+ettm_window <- expanded_travel_time_matrix(r5r_core,   
+                                             origins = origin_sf,
+                                             destinations = destination_sf,    
+                                             mode = c("Transit", "WALK"),
+                                             max_trip_duration = 120,
+                                             departure_datetime = departure_datetime,
+                                             breakdown = TRUE,
+                                             time_window = 10)
+str(ettm_window)
+```
+
+    ## Classes 'data.table' and 'data.frame':   10 obs. of  12 variables:
+    ##  $ from_id       : chr  "origin_1" "origin_1" "origin_1" "origin_1" ...
+    ##  $ to_id         : chr  "destination_1" "destination_1" "destination_1" "destination_1" ...
+    ##  $ departure_time: chr  "12:00:00" "12:01:00" "12:02:00" "12:03:00" ...
+    ##  $ draw_number   : int  1 1 1 1 1 1 1 1 1 1
+    ##  $ access_time   : num  0 0 0 0 0 0 0 0 0 0
+    ##  $ wait_time     : num  0 0 0 0 0 0 0 0 0 0
+    ##  $ ride_time     : num  0 0 0 0 0 0 0 0 0 0
+    ##  $ transfer_time : num  0 0 0 0 0 0 0 0 0 0
+    ##  $ egress_time   : num  0 0 0 0 0 0 0 0 0 0
+    ##  $ routes        : chr  "[WALK]" "[WALK]" "[WALK]" "[WALK]" ...
+    ##  $ n_rides       : int  0 0 0 0 0 0 0 0 0 0
+    ##  $ total_time    : num  30 30 30 30 30 30 30 30 30 30
+    ##  - attr(*, ".internal.selfref")=<externalptr>
+
+And not quite correct but in midday congestion somewhat feasible results
+for transport mode “BICYCLE”:
+
+``` r
+ettm_window_bicycle <- expanded_travel_time_matrix(r5r_core,   
+                                             origins = origin_sf,
+                                             destinations = destination_sf,    
+                                             mode = c("BICYCLE"),
+                                             max_trip_duration = 120,
+                                             departure_datetime = departure_datetime,
+                                             breakdown = TRUE,
+                                             time_window = 10)
+
+str(ettm_window_bicycle)
+```
+
+    ## Classes 'data.table' and 'data.frame':   10 obs. of  12 variables:
+    ##  $ from_id       : chr  "origin_1" "origin_1" "origin_1" "origin_1" ...
+    ##  $ to_id         : chr  "destination_1" "destination_1" "destination_1" "destination_1" ...
+    ##  $ departure_time: chr  "12:00:00" "12:01:00" "12:02:00" "12:03:00" ...
+    ##  $ draw_number   : int  1 1 1 1 1 1 1 1 1 1
+    ##  $ access_time   : num  0 0 0 0 0 0 0 0 0 0
+    ##  $ wait_time     : num  0 0 0 0 0 0 0 0 0 0
+    ##  $ ride_time     : num  0 0 0 0 0 0 0 0 0 0
+    ##  $ transfer_time : num  0 0 0 0 0 0 0 0 0 0
+    ##  $ egress_time   : num  0 0 0 0 0 0 0 0 0 0
+    ##  $ routes        : chr  "[BICYCLE]" "[BICYCLE]" "[BICYCLE]" "[BICYCLE]" ...
+    ##  $ n_rides       : int  0 0 0 0 0 0 0 0 0 0
+    ##  $ total_time    : num  17 17 17 17 17 17 17 17 17 17
+    ##  - attr(*, ".internal.selfref")=<externalptr>
+
+Although it does return correct results for transport mode “CAR”:
+
+``` r
+ettm_window_car <- expanded_travel_time_matrix(r5r_core,   
+                                             origins = origin_sf,
+                                             destinations = destination_sf,    
+                                             mode = c("CAR"),
+                                             max_trip_duration = 120,
+                                             departure_datetime = departure_datetime,
+                                             breakdown = TRUE,
+                                             time_window = 10)
+
+str(ettm_window_car)
+```
+
+    ## Classes 'data.table' and 'data.frame':   10 obs. of  12 variables:
+    ##  $ from_id       : chr  "origin_1" "origin_1" "origin_1" "origin_1" ...
+    ##  $ to_id         : chr  "destination_1" "destination_1" "destination_1" "destination_1" ...
+    ##  $ departure_time: chr  "12:00:00" "12:01:00" "12:02:00" "12:03:00" ...
+    ##  $ draw_number   : int  1 1 1 1 1 1 1 1 1 1
+    ##  $ access_time   : num  0 0 0 0 0 0 0 0 0 0
+    ##  $ wait_time     : num  0 0 0 0 0 0 0 0 0 0
+    ##  $ ride_time     : num  0 0 0 0 0 0 0 0 0 0
+    ##  $ transfer_time : num  0 0 0 0 0 0 0 0 0 0
+    ##  $ egress_time   : num  0 0 0 0 0 0 0 0 0 0
+    ##  $ routes        : chr  "[CAR]" "[CAR]" "[CAR]" "[CAR]" ...
+    ##  $ n_rides       : int  0 0 0 0 0 0 0 0 0 0
+    ##  $ total_time    : num  6 6 6 6 6 6 6 6 6 6
+    ##  - attr(*, ".internal.selfref")=<externalptr>
