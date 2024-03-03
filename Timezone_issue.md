@@ -22,20 +22,7 @@ library(dplyr)
 library(ggplot2)
 library(sf)
 library(osmextract)
-```
-
-    ## Warning: package 'osmextract' was built under R version 4.2.3
-
-    ## Data (c) OpenStreetMap contributors, ODbL 1.0. https://www.openstreetmap.org/copyright.
-    ## Check the package website, https://docs.ropensci.org/osmextract/, for more details.
-
-``` r
 library(osmdata)
-```
-
-    ## Data (c) OpenStreetMap contributors, ODbL 1.0. https://www.openstreetmap.org/copyright
-
-``` r
 library(readr)
 ```
 
@@ -205,16 +192,17 @@ r5r::r5r_sitrep()
     ## [7] r5r_1.1.0        rJava_1.0-6     
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] Rcpp_1.0.9         compiler_4.2.2     pillar_1.9.0       class_7.3-20       tools_4.2.2       
-    ##  [6] digest_0.6.29      gtable_0.3.1       evaluate_0.17      lifecycle_1.0.3    tibble_3.2.1      
-    ## [11] checkmate_2.1.0    pkgconfig_2.0.3    rlang_1.1.1        DBI_1.1.3          cli_3.4.1         
-    ## [16] rstudioapi_0.14    yaml_2.3.5         xfun_0.33          fastmap_1.1.0      e1071_1.7-11      
-    ## [21] stringr_1.5.1      withr_2.5.0        knitr_1.40         hms_1.1.2          sfheaders_0.4.0   
-    ## [26] generics_0.1.3     vctrs_0.6.2        tidyselect_1.2.0   classInt_0.4-8     grid_4.2.2        
-    ## [31] glue_1.6.2         data.table_1.14.4  R6_2.5.1           fansi_1.0.3        rmarkdown_2.17    
-    ## [36] tzdb_0.3.0         magrittr_2.0.3     ellipsis_0.3.2     scales_1.2.1       backports_1.4.1   
-    ## [41] htmltools_0.5.3    units_0.8-0        colorspace_2.0-3   KernSmooth_2.23-20 utf8_1.2.2        
-    ## [46] stringi_1.7.8      proxy_0.4-27       munsell_0.5.0
+    ##  [1] tidyselect_1.2.0   xfun_0.33          colorspace_2.0-3   vctrs_0.6.2        generics_0.1.3    
+    ##  [6] htmltools_0.5.3    yaml_2.3.5         utf8_1.2.2         rlang_1.1.1        e1071_1.7-11      
+    ## [11] pillar_1.9.0       glue_1.6.2         withr_2.5.0        DBI_1.1.3          bit64_4.0.5       
+    ## [16] lifecycle_1.0.3    stringr_1.5.1      munsell_0.5.0      gtable_0.3.1       evaluate_0.17     
+    ## [21] knitr_1.40         tzdb_0.3.0         fastmap_1.1.0      parallel_4.2.2     class_7.3-20      
+    ## [26] fansi_1.0.3        Rcpp_1.0.9         KernSmooth_2.23-20 backports_1.4.1    scales_1.2.1      
+    ## [31] classInt_0.4-8     checkmate_2.1.0    vroom_1.6.0        bit_4.0.4          hms_1.1.2         
+    ## [36] digest_0.6.29      stringi_1.7.8      grid_4.2.2         cli_3.4.1          tools_4.2.2       
+    ## [41] magrittr_2.0.3     proxy_0.4-27       tibble_3.2.1       crayon_1.5.2       sfheaders_0.4.0   
+    ## [46] pkgconfig_2.0.3    ellipsis_0.3.2     data.table_1.14.4  rmarkdown_2.17     rstudioapi_0.14   
+    ## [51] R6_2.5.1           units_0.8-0        compiler_4.2.2
 
 Can you please help with the issue or guide me in the right dierection
 how to resolve this? Thanks for any help in advance.
@@ -373,3 +361,90 @@ write.table(calendar,
 
 But then running either detailed_itineraries ro
 Expanded_travel_time_matrix still returns the modes as only “walk”.
+
+``` r
+# Set the departure time which is clearly within the start and end date of the calendar.txt
+departure_datetime <- as.POSIXct("2024-03-05 12:00:00", format = "%Y-%m-%d %H:%M:%S")
+
+# Run the detailed_itineraries function for the specific origin and destination
+test_itineraries <- detailed_itineraries(
+  r5r_core = r5r_core,
+  origins = origin_sf,
+  destinations = destination_sf,
+  mode = c("TRANSIT", "WALK"),
+  departure_datetime = departure_datetime,
+  max_trip_duration = 120,  # Ensure this is sufficiently high
+  time_window = 30,  # Time window
+  suboptimal_minutes = 15,  # Allow consideration of slightly slower routes
+  all_to_all = FALSE,  # Since we're testing a single O-D pair
+  shortest_path = FALSE,  # Allow suboptimal routes
+  drop_geometry = FALSE  # Keep geometry for mapping
+)
+
+# Check the structure and modes of the resulting itineraries
+str(test_itineraries)
+```
+
+    ## Classes 'sf', 'data.table' and 'data.frame': 1 obs. of  17 variables:
+    ##  $ from_id         : chr "origin_1"
+    ##  $ from_lat        : num 47.5
+    ##  $ from_lon        : num 19.1
+    ##  $ to_id           : chr "destination_1"
+    ##  $ to_lat          : num 47.5
+    ##  $ to_lon          : num 19.1
+    ##  $ option          : int 1
+    ##  $ departure_time  : chr "12:00:00"
+    ##  $ total_duration  : num 30.1
+    ##  $ total_distance  : int 1791
+    ##  $ segment         : int 1
+    ##  $ mode            : chr "WALK"
+    ##  $ segment_duration: num 30.1
+    ##  $ wait            : num 0
+    ##  $ distance        : int 1791
+    ##  $ route           : chr ""
+    ##  $ geometry        :sfc_LINESTRING of length 1; first list element:  'XY' num [1:60, 1:2] 19.1 19.1 19.1 19.1 19.1 ...
+    ##  - attr(*, "sf_column")= chr "geometry"
+    ##  - attr(*, "agr")= Factor w/ 3 levels "constant","aggregate",..: NA NA NA NA NA NA NA NA NA NA ...
+    ##   ..- attr(*, "names")= chr [1:16] "from_id" "from_lat" "from_lon" "to_id" ...
+
+``` r
+unique(test_itineraries$mode)
+```
+
+    ## [1] "WALK"
+
+And it is the same with ettm as well
+
+``` r
+ettm_window <- expanded_travel_time_matrix(r5r_core,   
+                                           origins = origin_sf,
+                                           destinations = destination_sf,    
+                                           mode = c("TRAM"),
+                                           max_trip_duration = 120,
+                                           departure_datetime = departure_datetime,
+                                           breakdown = TRUE,
+                                           time_window = 10)
+
+str(ettm_window)
+```
+
+    ## Classes 'data.table' and 'data.frame':   10 obs. of  12 variables:
+    ##  $ from_id       : chr  "origin_1" "origin_1" "origin_1" "origin_1" ...
+    ##  $ to_id         : chr  "destination_1" "destination_1" "destination_1" "destination_1" ...
+    ##  $ departure_time: chr  "12:00:00" "12:01:00" "12:02:00" "12:03:00" ...
+    ##  $ draw_number   : int  1 1 1 1 1 1 1 1 1 1
+    ##  $ access_time   : num  0 0 0 0 0 0 0 0 0 0
+    ##  $ wait_time     : num  0 0 0 0 0 0 0 0 0 0
+    ##  $ ride_time     : num  0 0 0 0 0 0 0 0 0 0
+    ##  $ transfer_time : num  0 0 0 0 0 0 0 0 0 0
+    ##  $ egress_time   : num  0 0 0 0 0 0 0 0 0 0
+    ##  $ routes        : chr  "[WALK]" "[WALK]" "[WALK]" "[WALK]" ...
+    ##  $ n_rides       : int  0 0 0 0 0 0 0 0 0 0
+    ##  $ total_time    : num  30 30 30 30 30 30 30 30 30 30
+    ##  - attr(*, ".internal.selfref")=<externalptr>
+
+``` r
+unique(ettm_window$routes)
+```
+
+    ## [1] "[WALK]"
