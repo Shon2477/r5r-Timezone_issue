@@ -22,7 +22,21 @@ library(dplyr)
 library(ggplot2)
 library(sf)
 library(osmextract)
+```
+
+    ## Warning: package 'osmextract' was built under R version 4.2.3
+
+    ## Data (c) OpenStreetMap contributors, ODbL 1.0. https://www.openstreetmap.org/copyright.
+    ## Check the package website, https://docs.ropensci.org/osmextract/, for more details.
+
+``` r
 library(osmdata)
+```
+
+    ## Data (c) OpenStreetMap contributors, ODbL 1.0. https://www.openstreetmap.org/copyright
+
+``` r
+library(readr)
 ```
 
 \#Build Transport Network We specify the data path and initialize the R5
@@ -43,9 +57,9 @@ your_data_path <- "C:/UCL/Dissertation/transit_data"
 list.files("C:/UCL/Dissertation/transit_data")
 ```
 
-    ## [1] "budapest_gtfs2.zip"             "hungary-latest.gpkg"            "hungary-latest.osm.pbf"        
-    ## [4] "hungary-latest.osm.pbf.mapdb"   "hungary-latest.osm.pbf.mapdb.p" "network.dat"                   
-    ## [7] "network_settings.json"
+    ## [1] "budapest_gtfs (3).zip"          "calendar.txt"                   "hungary-latest.gpkg"           
+    ## [4] "hungary-latest.osm.pbf"         "hungary-latest.osm.pbf.mapdb"   "hungary-latest.osm.pbf.mapdb.p"
+    ## [7] "network.dat"                    "network_settings.json"
 
 ``` r
 # Initialize the R5 transport network
@@ -174,12 +188,12 @@ r5r::r5r_sitrep()
     ## $session_info
     ## R version 4.2.2 (2022-10-31 ucrt)
     ## Platform: x86_64-w64-mingw32/x64 (64-bit)
-    ## Running under: Windows 10 x64 (build 22621)
+    ## Running under: Windows 10 x64 (build 22631)
     ## 
     ## Matrix products: default
     ## 
     ## locale:
-    ## [1] LC_COLLATE=English_United Kingdom.utf8  LC_CTYPE=C                             
+    ## [1] LC_COLLATE=English_United Kingdom.utf8  LC_CTYPE=English_United Kingdom.utf8   
     ## [3] LC_MONETARY=English_United Kingdom.utf8 LC_NUMERIC=C                           
     ## [5] LC_TIME=English_United Kingdom.utf8    
     ## 
@@ -187,19 +201,20 @@ r5r::r5r_sitrep()
     ## [1] stats     graphics  grDevices utils     datasets  methods   base     
     ## 
     ## other attached packages:
-    ## [1] osmdata_0.2.0    osmextract_0.5.0 sf_1.0-8         ggplot2_3.3.6    dplyr_1.1.2      rJava_1.0-6     
-    ## [7] r5r_1.1.0       
+    ## [1] readr_2.1.3      osmdata_0.2.0    osmextract_0.5.0 ggplot2_3.3.6    dplyr_1.1.2      sf_1.0-8        
+    ## [7] r5r_1.1.0        rJava_1.0-6     
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] Rcpp_1.0.9         pillar_1.9.0       compiler_4.2.2     class_7.3-20       tools_4.2.2       
-    ##  [6] digest_0.6.29      checkmate_2.1.0    evaluate_0.17      lifecycle_1.0.3    tibble_3.2.1      
-    ## [11] gtable_0.3.1       pkgconfig_2.0.3    rlang_1.1.1        cli_3.4.1          DBI_1.1.3         
+    ##  [1] Rcpp_1.0.9         compiler_4.2.2     pillar_1.9.0       class_7.3-20       tools_4.2.2       
+    ##  [6] digest_0.6.29      gtable_0.3.1       evaluate_0.17      lifecycle_1.0.3    tibble_3.2.1      
+    ## [11] checkmate_2.1.0    pkgconfig_2.0.3    rlang_1.1.1        DBI_1.1.3          cli_3.4.1         
     ## [16] rstudioapi_0.14    yaml_2.3.5         xfun_0.33          fastmap_1.1.0      e1071_1.7-11      
-    ## [21] withr_2.5.0        stringr_1.5.1      knitr_1.40         sfheaders_0.4.0    generics_0.1.3    
-    ## [26] vctrs_0.6.2        classInt_0.4-8     grid_4.2.2         tidyselect_1.2.0   glue_1.6.2        
-    ## [31] data.table_1.14.4  R6_2.5.1           fansi_1.0.3        rmarkdown_2.17     magrittr_2.0.3    
-    ## [36] backports_1.4.1    units_0.8-0        scales_1.2.1       htmltools_0.5.3    colorspace_2.0-3  
-    ## [41] KernSmooth_2.23-20 utf8_1.2.2         proxy_0.4-27       stringi_1.7.8      munsell_0.5.0
+    ## [21] stringr_1.5.1      withr_2.5.0        knitr_1.40         hms_1.1.2          sfheaders_0.4.0   
+    ## [26] generics_0.1.3     vctrs_0.6.2        tidyselect_1.2.0   classInt_0.4-8     grid_4.2.2        
+    ## [31] glue_1.6.2         data.table_1.14.4  R6_2.5.1           fansi_1.0.3        rmarkdown_2.17    
+    ## [36] tzdb_0.3.0         magrittr_2.0.3     ellipsis_0.3.2     scales_1.2.1       backports_1.4.1   
+    ## [41] htmltools_0.5.3    units_0.8-0        colorspace_2.0-3   KernSmooth_2.23-20 utf8_1.2.2        
+    ## [46] stringi_1.7.8      proxy_0.4-27       munsell_0.5.0
 
 Can you please help with the issue or guide me in the right dierection
 how to resolve this? Thanks for any help in advance.
@@ -291,3 +306,70 @@ str(ettm_window_car)
     ##  $ n_rides       : int  0 0 0 0 0 0 0 0 0 0
     ##  $ total_time    : num  6 6 6 6 6 6 6 6 6 6
     ##  - attr(*, ".internal.selfref")=<externalptr>
+
+I have created the calendar.txt from calendar_dates.txt the following
+way.
+
+``` r
+# Load calendar_dates.txt
+calendar_dates <- read_csv("C:/UCL/Dissertation/calendar_dates.csv")
+```
+
+    ## Rows: 8271 Columns: 3
+    ## ── Column specification ─────────────────────────────────────────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (1): service_id
+    ## dbl (2): date, exception_type
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
+# Aggregate to find the minimum and maximum dates for each service_id
+service_periods <- calendar_dates %>%
+  group_by(service_id) %>%
+  summarize(start_date = min(date), end_date = max(date))
+
+# Assuming services run every day, create a calendar dataframe
+calendar <- service_periods %>%
+  mutate(monday = 1,
+         tuesday = 1,
+         wednesday = 1,
+         thursday = 1,
+         friday = 1,
+         saturday = 1,
+         sunday = 1,
+         start_date = as.character(start_date),
+         end_date = as.character(end_date))
+
+# Select and rename columns to match the GTFS calendar.txt format
+calendar <- calendar %>%
+  select(service_id, monday, tuesday, wednesday, thursday, friday, saturday, sunday, start_date, end_date)
+
+str(calendar)
+```
+
+    ## tibble [1,351 × 10] (S3: tbl_df/tbl/data.frame)
+    ##  $ service_id: chr [1:1351] "36134" "36135" "36136" "36137" ...
+    ##  $ monday    : num [1:1351] 1 1 1 1 1 1 1 1 1 1 ...
+    ##  $ tuesday   : num [1:1351] 1 1 1 1 1 1 1 1 1 1 ...
+    ##  $ wednesday : num [1:1351] 1 1 1 1 1 1 1 1 1 1 ...
+    ##  $ thursday  : num [1:1351] 1 1 1 1 1 1 1 1 1 1 ...
+    ##  $ friday    : num [1:1351] 1 1 1 1 1 1 1 1 1 1 ...
+    ##  $ saturday  : num [1:1351] 1 1 1 1 1 1 1 1 1 1 ...
+    ##  $ sunday    : num [1:1351] 1 1 1 1 1 1 1 1 1 1 ...
+    ##  $ start_date: chr [1:1351] "20240302" "20240302" "20240302" "20240302" ...
+    ##  $ end_date  : chr [1:1351] "20240402" "20240401" "20240402" "20240401" ...
+
+``` r
+# Writing it into a .txt
+write.table(calendar, 
+            "C:/UCL/Dissertation/transit_data/calendar.txt", 
+            sep = ",", 
+            row.names = FALSE, 
+            col.names = TRUE, 
+            quote = FALSE)
+```
+
+But then running either detailed_itineraries ro
+Expanded_travel_time_matrix still returns the modes as only “walk”.
