@@ -1,0 +1,177 @@
+---
+title: "Mapping"
+author: "Gergely Som"
+date: "2024-03-21"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Essentially I was wondering how to create a contour map that is iny within the extent of Budapest, but have not really managed to figure out a way to make the maps more aesthetically pleasing.
+
+```{r} 
+#Loading all the packages used in the creation of the maps
+library(rJava)
+library(r5r)
+library(dplyr)
+library(ggplot2)
+library(sf)
+library(osmextract)
+library(osmdata)
+library(interp)
+library(h3jsr)
+```
+```{r} 
+#Allocating memory for rJava
+.jinit(parameters = "-Xmx8g")
+```
+```{r}
+# 1) Build transport network
+# Replace 'your_data_path' with the path to your data
+your_data_path <- "C:/UCL/Dissertation/transit_data"
+r5r_core <- setup_r5(data_path = your_data_path)
+```
+
+```{r}
+#Reading in the base layers for the accessibility maps
+budapest_districts <- st_read("Budapest_districts.kml")
+
+budapest_outline <- st_read("C:/UCL/Dissertation/Budapest.kml")
+
+geometries_extracted <- st_collection_extract(budapest_outline, "POLYGON")
+
+budapest_districts$admin_level <- rep(9, nrow(budapest_districts))
+
+# Filter out only polygon geometries
+budapest_districts_poly <- budapest_districts[st_geometry_type(budapest_districts) %in% c("POLYGON", "MULTIPOLYGON"), ]
+```
+
+
+```{r}
+#Reading in origins and destinations
+orig <- st_read('orig.gpkg') |> st_transform(4326) |> st_centroid()
+dest <- st_read('hospitals.gpkg') |> st_transform(4326) |> st_centroid()
+```
+
+```{r}
+# For origins
+orig <- orig %>%
+  mutate(id = row_number(), # Create an ID column
+         lat = st_coordinates(geom)[,2], # Extract latitude
+         lon = st_coordinates(geom)[,1]) %>% # Extract longitude
+  select(id, lat, lon) # Keep only required columns
+
+# For destinations
+dest <- dest %>%
+  mutate(id = row_number(), # Create an ID column
+         lat = st_coordinates(geom)[,2], # Extract latitude
+         lon = st_coordinates(geom)[,1]) %>% # Extract longitude
+  select(id, lat, lon) # Keep only required columns
+
+# Add an 'opportunities' column with a placeholder value (e.g., 1 for each destination)
+dest$opportunities <- 1
+
+# Verify the structures
+str(orig)
+str(dest)
+```
+
+
+```{r}
+# Running the accessibility() function for daytime accessibility
+access_results <- accessibility(
+  r5r_core = r5r_core,
+  origins = orig,
+  destinations = dest,
+  opportunities_colnames = "opportunities",
+  mode = "TRANSIT",
+  departure_datetime = as.POSIXct("2024-03-05 12:00:00"),
+  decay_function = "step",
+  cutoffs = 30,
+  max_trip_duration = 60,
+  verbose = TRUE
+)
+```
+
+```{r}
+# Assuming 'orig' contains 'lat' and 'lon' columns
+# Choose an appropriate resolution level (0 to 15)
+res <- 8  # Example resolution level
+
+orig_all_res <- point_to_cell(orig, res = seq(0, 15), simple = FALSE)
+
+# Verify the H3 indexes
+head(orig_all_res)
+str(orig_all_res)
+
+# retrieve polygons of H3 spatial grid
+grid <- h3jsr::cell_to_polygon(orig_all_res$h3_resolution_8, simple = FALSE)
+
+str(grid)
+str(access_results)
+
+# Add the 'id' from 'orig_all_res' to 'grid'
+grid_with_id <- left_join(grid, orig_all_res[, c("h3_resolution_8", "id")], by = c("h3_address" = "h3_resolution_8"))
+
+grid_with_id$id <- as.character(grid_with_id$id)
+orig$id <- as.character(orig$id)
+
+# merge accessibility estimates
+access_sf <- left_join(grid_with_id, access_results, by = "id")
+access_sf
+
+#Clip access_sf with geometries_extracted
+clipped_access_sf <- st_intersection(access_sf, geometries_extracted)
+
+orig_df <- as.data.frame(orig)
+access_hospital <- as.data.frame(clipped_access_sf)
+
+
+# interpolate estimates to get spatially smooth result
+access_hospitals <- access_hospital %>% 
+  filter(opportunity == "opportunities") %>%
+  inner_join(orig_df, by='id') %>%
+  with(interp::interp(lon, lat, accessibility, duplicate = "strip")) %>%
+  with(cbind(acc=as.vector(z),  # Column-major order
+             x=rep(x, times=length(y)),
+             y=rep(y, each=length(x)))) %>% as.data.frame() %>% na.omit() %>%
+  mutate(opportunity = "opportunities")
+
+#Inspect and save the results
+str(access_hospitals)
+
+write.csv(access_hospitals, "access_hospitals.csv", row.names = FALSE)
+```
+
+```{r}
+# Assuming budapest_districts_poly is an sf object
+bbox <- st_bbox(budapest_districts_poly)
+bb_x <- c(bbox["xmin"], bbox["xmax"])
+bb_y <- c(bbox["ymin"], bbox["ymax"])
+```
+
+
+```{r}
+#And now doing the plotting
+plot_day <- ggplot(na.omit(access_hospitals)) +
+  geom_sf(data = budapest_districts_poly, fill = "lightgray", color = "black") +
+  geom_contour_filled(aes(x=x, y=y, z=acc), alpha=.7, breaks = c(0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 15, 18, 21, 24)) +
+  scale_fill_viridis_d(direction = -1, option = 'B') +
+  scale_x_continuous(expand=c(0,0)) +
+  scale_y_continuous(expand=c(0,0)) +
+  coord_sf(xlim = bb_x, ylim = bb_y, datum = NA) + 
+  labs(fill = "Number of\nfacilities within\n30 minutes") +
+  theme_void() +
+  facet_wrap(~opportunity)
+
+plot_day
+
+```
+As we can see the accessibility scores are not confined within the extend of geometries extracted which is the outline of Budapest.The question would be is there any way to fill the grey areas that the accessibility score layer does not cover and also to crop the accessibility layer with the Budapest outline.
+
+
+
+
+
